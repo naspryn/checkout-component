@@ -46,7 +46,7 @@ public class CheckoutService implements Checkout {
         Money price = Money.of(0, "USD");
 
         while (count > 0) {
-            if (count > specialCount && specialCount > 0) {
+            if (count >= specialCount && specialCount > 0) {
                 count -= specialCount;
                 price = price.add(specialPrice.getPrice());
                 continue;

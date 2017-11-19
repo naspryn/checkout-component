@@ -1,13 +1,16 @@
 package net.naspryn.checkoutservice.service;
 
-
-import com.google.common.collect.ImmutableMap;
+import net.naspryn.checkoutservice.exceptions.NoSuchProductAvailable;
+import net.naspryn.checkoutservice.util.TestUtil;
 import org.javamoney.moneta.Money;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
+import java.util.Map;
+
+import static net.naspryn.checkoutservice.util.TestUtil.getSampleProductsBasketWithNonExistingProduct;
 import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class CheckoutServiceTest {
 
@@ -18,19 +21,17 @@ public class CheckoutServiceTest {
         checkoutService = new CheckoutService(new ProductsServiceClient());
     }
 
-    @Test
-    public void checkoutShouldReturnExpectedTotalPrice() throws Exception {
-        assertThat(checkoutService.checkout(getSampleProductsBasket()))
+    @Test(dataProvider = "ProductBasket", dataProviderClass = TestUtil.class)
+    public void checkoutShouldReturnExpectedTotalPrice(Map<Long, Integer> products, Money expected) throws Exception {
+        assertThat(checkoutService.checkout(products))
                 .as("Checkout service should return expected total price")
-                .isEqualTo(Money.of(320, "USD"));
+                .isEqualTo(expected);
     }
 
-    private ImmutableMap<Long, Integer> getSampleProductsBasket() {
-        return ImmutableMap.<Long, Integer>builder()
-                .put(1L, 5)
-                .put(8L, 4)
-                .put(12L, 3)
-                .put(10L, 2)
-                .build();
+    @Test
+    public void checkoutShouldThrowNoSuchProductAvailableException() {
+        assertThatThrownBy(() -> checkoutService.checkout(getSampleProductsBasketWithNonExistingProduct()))
+                .as("Checkout service should throw NoSuchProductAvailable exception if product not exists")
+                .isInstanceOf(NoSuchProductAvailable.class);
     }
 }
